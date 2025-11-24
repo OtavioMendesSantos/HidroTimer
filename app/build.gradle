@@ -1,0 +1,59 @@
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+}
+
+android {
+    namespace 'com.example.hidrotimer'
+    compileSdk 36   // <-- ATUALIZADO
+
+    defaultConfig {
+        applicationId "com.example.hidrotimer"
+        minSdk 33     // Pode manter 33, perfeito para Wear OS 4+
+        targetSdk 36  // <-- ATUALIZADO
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    // Se seu app for Java puro, você pode remover essa parte.
+    // MAS como o template Wear OS vem com Compose por padrão,
+    // deixamos assim para não quebrar por enquanto.
+    kotlinOptions {
+        jvmTarget = '11'
+    }
+
+    buildFeatures {
+        compose true  // Se quiser tirar Compose depois, eu te ensino
+    }
+}
+
+dependencies {
+
+    implementation libs.play.services.wearable
+    implementation platform(libs.compose.bom)
+    implementation libs.ui
+    implementation libs.ui.graphics
+    implementation libs.ui.tooling.preview
+    implementation libs.compose.material
+    implementation libs.compose.foundation
+    implementation libs.wear.tooling.preview
+    implementation libs.activity.compose
+    implementation libs.core.splashscreen
+    androidTestImplementation platform(libs.compose.bom)
+    androidTestImplementation libs.ui.test.junit4
+    debugImplementation libs.ui.tooling
+    debugImplementation libs.ui.test.manifest
+}
