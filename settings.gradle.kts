@@ -20,4 +20,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "HidroTimer"
-include ':app'
+include(":app")
