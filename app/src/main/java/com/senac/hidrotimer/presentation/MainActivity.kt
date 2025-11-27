@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -22,10 +23,9 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun HidroTimerApp() {
-
-    // ESTADOS GLOBAIS
-    var totalIngerido by remember { mutableStateOf(0) }
-    var metaDiaria by remember { mutableStateOf(3000) }
+    val viewModel: HidroTimerViewModel = viewModel()
+    val totalIngerido by viewModel.totalIngerido.collectAsState()
+    val metaDiaria by viewModel.metaDiaria.collectAsState()
 
     val navController = rememberNavController()
 
@@ -43,16 +43,17 @@ fun HidroTimerApp() {
                 totalIngerido = totalIngerido,
                 metaDiaria = metaDiaria,
                 onNavigateAdd = { navController.navigate("addWater") },
-                onNavigateMeta = { navController.navigate("alterarMeta") }
+                onNavigateMeta = { navController.navigate("alterarMeta") },
+                onNavigateEasterEgg = { navController.navigate("easterEgg") }
             )
         }
 
         composable("addWater") {
             AddWaterScreen(
-                onAdd = { quantidade ->
-                    totalIngerido += quantidade
-                },
-                onBack = { navController.popBackStack() }
+                viewModel = viewModel,
+                metaDiaria = metaDiaria,
+                onBack = { navController.popBackStack() },
+                onMetaAtingida = { navController.navigate("metaAtingida") }
             )
         }
 
@@ -60,9 +61,21 @@ fun HidroTimerApp() {
             AlterarMetaScreen(
                 metaAtual = metaDiaria,
                 onConfirm = { novaMeta ->
-                    metaDiaria = novaMeta
+                    viewModel.atualizarMeta(novaMeta)
                 },
                 onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable("metaAtingida") {
+            MetaAtingidaScreen(
+                onBack = { navController.navigate("home") { popUpTo(0) } }
+            )
+        }
+
+        composable("easterEgg") {
+            EasterEggScreen(
+                onDismiss = { navController.popBackStack() }
             )
         }
     }

@@ -1,5 +1,9 @@
 package com.senac.hidrotimer.presentation
 
+import android.content.Context
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -18,10 +23,24 @@ import androidx.wear.compose.material.MaterialTheme
 
 @Composable
 fun AddWaterScreen(
-    onAdd: (Int) -> Unit,
-    onBack: () -> Unit
+    viewModel: HidroTimerViewModel,
+    metaDiaria: Int,
+    onBack: () -> Unit,
+    onMetaAtingida: () -> Unit
 ) {
     var quantidade by remember { mutableStateOf(0) }
+    val totalIngerido by viewModel.totalIngerido.collectAsState()
+    val context = LocalContext.current
+    var aguardandoVerificacao by remember { mutableStateOf(false) }
+
+    // Verificar meta quando totalIngerido for atualizado
+    LaunchedEffect(totalIngerido) {
+        if (aguardandoVerificacao && totalIngerido >= metaDiaria) {
+            vibrar(context)
+            onMetaAtingida()
+            aguardandoVerificacao = false
+        }
+    }
 
     BoxWithConstraints(
         modifier = Modifier.fillMaxSize(),
@@ -49,7 +68,7 @@ fun AddWaterScreen(
                 color = Color(0xFF003366),
                 fontSize = (18f * scale).sp,
                 fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.title1   // ← FONTE APLICADA
+                style = MaterialTheme.typography.title1
             )
 
             Spacer(modifier = Modifier.height((20f * scale).dp))
@@ -100,8 +119,18 @@ fun AddWaterScreen(
                     .width((150f * scale).dp)
                     .height((55f * scale).dp)
                     .clickable {
-                        onAdd(quantidade)
-                        onBack()
+                        if (quantidade > 0) {
+                            val novoTotal = totalIngerido + quantidade
+                            viewModel.adicionarAgua(quantidade)
+                            
+                            // Verificar se atingiu ou ultrapassou a meta
+                            if (novoTotal >= metaDiaria) {
+                                aguardandoVerificacao = true
+                                // A verificação final será feita pelo LaunchedEffect
+                            } else {
+                                onBack()
+                            }
+                        }
                     }
             )
 
@@ -113,5 +142,15 @@ fun AddWaterScreen(
                 modifier = Modifier.size((60f * scale).dp)
             )
         }
+    }
+}
+
+private fun vibrar(context: Context) {
+    val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        vibrator?.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
+    } else {
+        @Suppress("DEPRECATION")
+        vibrator?.vibrate(500)
     }
 }
